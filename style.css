@@ -1,0 +1,41 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+  }
+  
+  header {
+    background-color: #333;
+    color: #fff;
+    padding: 1rem;
+  }
+  
+  main {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 80vh;
+  }
+  
+  .time-header {
+    font-size: 24px;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+
+  .queue-container {
+    background-color: #f1f1f1;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    padding: 2rem;
+    text-align: center;
+  }
+  
+  .centered-content {
+    text-align: center;
+  }
+  
+  #queue-number {
+    font-size: 4rem;
+    margin-top: 1rem;
+  }
