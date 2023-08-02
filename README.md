@@ -17,7 +17,7 @@ To get started with the Timeslot Editor, follow these steps:
 3. Go to localhost:8888 in your web browser. (You can change in server.py)
 4. Run ```python timeModifier.py```
 
-#### Alternate Way
+#### Alternate Way ** Currently this is not available. **
 You can also run the ```'/dist/timeModifier/timeModifier.exe'```, it uses another excel file instead of the server one.
   
 ## Usage
