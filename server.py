@@ -68,6 +68,8 @@ class WebServer:
     def __init__(self, host, port):
         self.host = host
         self.port = port
+        self.webqueue = 0
+        self.MAX_QUEUE_SIZE = 30
         self.queue = VisitorManager("queue.xlsx")
         self.lock = threading.Lock()
         self.logger = logging.getLogger("WebServer")
@@ -81,6 +83,7 @@ class WebServer:
         self.index_data = self.load_file('index.html')
         self.css_data = self.load_file('style.css')
         self.js_data = self.load_file('app.js')
+        self.queuePage_data = self.load_file('queuePage.html')
         
     def load_file(self, filename):
         with open(filename, 'r') as f:
@@ -101,7 +104,9 @@ class WebServer:
             threading.Thread(target=self.handle_connection, args=(client_socket,), daemon=True).start()
 
     def handle_connection(self, client_socket):
-
+        
+        self.webqueue += 1
+        
         request = client_socket.recv(1024).decode()
         
         parsed_request = parse_http_request(request)
@@ -109,32 +114,38 @@ class WebServer:
         path = parsed_request['path']
         self.logger.info(f"{method} {path}")
 
-        if method == "GET" and path == "/":
-            response_data = self.index_data   
-            response = f"HTTP/1.1 200 OK\r\n\r\n" + response_data
-            self.logger.info(f"{method} {path} 200 OK")   
+        if self.webqueue < self.MAX_QUEUE_SIZE:      
+            if method == "GET" and path == "/":   
+                response_data = self.index_data   
+                response = f"HTTP/1.1 200 OK\r\n\r\n" + response_data
+                self.logger.info(f"{method} {path} 200 OK")   
+                
+            elif method == "GET" and path == "/style.css":
+                response_data = self.css_data   
+                response = f"HTTP/1.1 200 OK\r\n\r\n" + response_data
+                self.logger.info(f"{method} {path} 200 OK")  
+                
+            elif method == "GET" and path == "/app.js":
+                response_data = self.js_data   
+                response = f"HTTP/1.1 200 OK\r\n\r\n" + response_data
+                self.logger.info(f"{method} {path} 200 OK")    
             
-        elif method == "GET" and path == "/style.css":
-            response_data = self.css_data   
-            response = f"HTTP/1.1 200 OK\r\n\r\n" + response_data
-            self.logger.info(f"{method} {path} 200 OK")  
-            
-        elif method == "GET" and path == "/app.js":
-            response_data = self.js_data   
-            response = f"HTTP/1.1 200 OK\r\n\r\n" + response_data
-            self.logger.info(f"{method} {path} 200 OK")    
-        
-        elif method == "GET" and path == "/queue":
-            response_data = self.queue.to_dict()
-            response_body = json.dumps(response_data) 
-            response = f"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{response_body}"
-            self.logger.info(f"{method} {path} 200 OK")  
-            
+            elif method == "GET" and path == "/queue":
+                response_data = self.queue.to_dict()
+                response_body = json.dumps(response_data) 
+                response = f"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{response_body}"
+                self.logger.info(f"{method} {path} 200 OK")  
+                
+            else:
+                response = "HTTP/1.1 404 Not Found\r\n\r\n"
+                self.logger.warning(f"404 Not Found")
         else:
-            response = "HTTP/1.1 404 Not Found\r\n\r\n"
-            self.logger.warning(f"404 Not Found")
-
+            response_data = self.queuePage_data
+            response = f"HTTP/1.1 200 OK\r\n\r\n" + response_data
+            self.logger.info(f"Directed to queue page") 
+            
         client_socket.sendall(response.encode())
+        self.webqueue -= 1
         client_socket.close()
         
 def parse_http_request(request_string):
